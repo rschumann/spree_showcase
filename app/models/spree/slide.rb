@@ -1,30 +1,22 @@
 module Spree
   class Slide < ActiveRecord::Base
 
-    has_attached_file :image,
-      :styles=>{:thumb=> ["#{SpreeShowcase::Config.thumbnail_style}"],
-                :showcase=> ["#{SpreeShowcase::Config.showcase_style}"]},
-      :url => '/spree/showcase/:id/:style/:basename.:extension',
-      :path => ':rails_root/public/spree/showcase/:id/:style/:basename.:extension'
+      
+    has_attached_file   :image,
+                      :styles =>{
+                        :max400  => "400x",
+                        :max800 => "800x",
+                        :max1000 => "1000x",
+                        :max1300 => "1300x",
+                        :large => "1600x"
+                      },
+                      :storage => :s3,
+                      :s3_credentials => "#{Rails.root}/config/s3.yml",
+                      :s3_host_name => 's3-eu-west-1.amazonaws.com',
+                      :url => '/spree/showcase/:id/:style/:basename.:extension',
+                      :path => ':rails_root/public/spree/showcase/:id/:style/:basename.:extension'
     
-    # Add S3 and Heroku support
-    s3_options = if ENV['S3_KEY'] && ENV['S3_SECRET'] && ENV['S3_BUCKET']
-      {
-        :storage => 's3',
-        :s3_credentials => {
-          :access_key_id     => ENV['S3_KEY'],
-          :secret_access_key => ENV['S3_SECRET']
-        },
-        :bucket => ENV['S3_BUCKET']
-      }
-    elsif (s3_config_file = Rails.root.join('config','s3.yml')).exist?
-      {
-        :storage => 's3',
-        :s3_credentials => s3_config_file
-      }
-    else
-      { :storage => 'filesystem' }
-    end
+
 
     attachment_definitions[:image] = (attachment_definitions[:image] || {}).merge(s3_options)
     
